@@ -3,63 +3,70 @@ import {
   Canvas,
   useValue,
   useTouchHandler,
-  Fill,
   runTiming,
-  rrect,
   Box,
-  BoxShadow,
-  rect,
   interpolate,
   useValueEffect,
-  Paint,
   Group,
-  LinearGradient,
-  vec,
-  DashPathEffect,
+  SkRRect,
 } from '@shopify/react-native-skia';
 import { defaultProps, SkiaButtonPropsType } from './SkiaButtonType';
 import { StyleSheet } from 'react-native';
 import styles from './SkiaButtonStyle';
 import { SkiaText } from '../Text';
 import { SkiaCircleProgress } from '../CircleProgress';
+import { SkiaBackground } from '../Background';
+import { SkiaShadow } from '../Shadow';
+import { animRRectValue, isNotEmpty } from './SkiaButtonUtil';
+import { SkiaStroke } from '../Stroke';
+import { SkiaImage } from '../Image';
 
-const animRRectValue = (
-  animCurrentProgress: number,
-  width: number,
-  height: number,
-  radius: number
-) => {
-  const animHeight = height + 20;
-  return rrect(
-    rect(
-      interpolate(
-        animCurrentProgress,
-        [0, 1],
-        [20, width / 2 - animHeight / 2]
-      ),
-      interpolate(animCurrentProgress, [0, 1], [20, 10]),
-      interpolate(animCurrentProgress, [0, 1], [width - 40, animHeight]),
-      interpolate(animCurrentProgress, [0, 1], [height, animHeight])
-    ),
-    interpolate(animCurrentProgress, [0, 1], [radius, animHeight / 2]),
-    interpolate(animCurrentProgress, [0, 1], [radius, animHeight / 2])
-  );
-};
 const SkiaButton = ({
   width,
   height,
   borderRadius,
+  horizontalMargin,
+  verticalMargin,
   loading,
+  duration,
   onPress,
-  background: { color },
-  shadow: { lightShadow, darkShadow },
+  background,
+  shadow,
   text,
   progress,
+  stroke,
+  image,
 }: SkiaButtonPropsType) => {
-  const [isPressed, setPressed] = useState(false);
-  const anim = useValue(0);
-  const animRRect = useValue(animRRectValue(0, width, height, borderRadius));
-  const animRevert = useValue(1);
+  const isDashed: boolean =
+    isNotEmpty(stroke?.dashWidth) && isNotEmpty(stroke?.dashGap);
+
+  const [isPressed, setPressed] = useState<boolean>(false);
+  const anim = useValue<number>(0);
+  const animRevert = useValue<number>(1);
+  const animFillRect = useValue<SkRRect>(
+    animRRectValue(
+      0,
+      width,
+      height,
+      borderRadius,
+      horizontalMargin,
+      verticalMargin,
+      stroke?.width ?? 0,
+      isDashed
+    )
+  );
+  const animStrokeRect = useValue<SkRRect>(
+    animRRectValue(
+      0,
+      width,
+      height,
+      borderRadius,
+      horizontalMargin,
+      verticalMargin,
+      stroke?.width ?? 0,
+      false
+    )
+  );
 
   const touchHandler = useTouchHandler({
     onStart: () => {
@@ -72,15 +79,34 @@ const SkiaButton = ({
   });
 
   useValueEffect(anim, (progress) => {
-    animRRect.current = animRRectValue(progress, width, height, borderRadius);
+    animFillRect.current = animRRectValue(
+      progress,
+      width,
+      height,
+      borderRadius,
+      horizontalMargin,
+      verticalMargin,
+      stroke?.width ?? 0,
+      isDashed
+    );
+    animStrokeRect.current = animRRectValue(
+      progress,
+      width,
+      height,
+      borderRadius,
+      horizontalMargin,
+      verticalMargin,
+      stroke?.width ?? 0,
+      false
+    );
     animRevert.current = interpolate(progress, [0, 1], [1, 0]);
   });
 
   useEffect(() => {
     if (loading) {
-      runTiming(anim, 1, { duration: 1000 });
+      runTiming(anim, 1, { duration });
     } else {
-      runTiming(anim, 0, { duration: 1000 });
+      runTiming(anim, 0, { duration });
     }
   }, [loading]);
 
@@ -88,61 +114,87 @@ const SkiaButton = ({
     <Canvas
       style={StyleSheet.flatten([
         styles.container,
-        { width, height: height + 40 },
+        { width: width + 2 * horizontalMargin, height: height + 2 * verticalMargin },
       ])}
       onTouch={touchHandler}
     >
       <Group>
-        <Box box={animRRect}>
-          <BoxShadow
-            dx={darkShadow.dx}
-            dy={darkShadow.dy}
-            blur={darkShadow.blur}
-            color={darkShadow.color}
-            inner={isPressed}
+        {shadow && (
+          <SkiaShadow
+            animRRect={animFillRect}
+            isPressed={isPressed}
+            darkShadow={shadow?.darkShadow}
+            lightShadow={shadow?.lightShadow}
           />
-          <BoxShadow
-            dx={lightShadow.dx}
-            dy={lightShadow.dy}
-            blur={lightShadow.blur}
-            color={lightShadow.color}
-            inner={isPressed}
-          />
+        )}
+        <Box box={animFillRect}>
+          {background && (
+            <SkiaBackground
+              width={width}
+              height={height}
+              color={background.color}
+              gradient={background.gradient}
+              gradientName={background.gradientName}
+            />
+          )}
         </Box>
-        <Box box={animRRect}>
-          <Paint style={'fill'}>
-            <LinearGradient
-              start={vec(20, 20)}
-              end={vec(width - 40, height)}
-              positions={[0, 1]}
-              colors={['#0061ff', '#60efff']}
+        <Box box={animStrokeRect} color={'transparent'}>
+          {stroke && (
+            <SkiaStroke
+              width={width}
+              height={height}
+              strokeWidth={stroke.width}
+              dashWidth={stroke.dashWidth}
+              dashGap={stroke.dashGap}
+              color={stroke.color}
+              gradient={stroke.gradient}
+              gradientName={stroke.gradientName}
+              isDashed={isDashed}
             />
-          </Paint>
-          <Paint style={'stroke'} strokeWidth={5}>
-            <LinearGradient
-              start={vec(0, 0)}
-              end={vec(width / 2, height / 2)}
-              colors={['#0061ff', '#60efff']}
-            />
-            <DashPathEffect intervals={[10, 5]} />
-          </Paint>
+          )}
         </Box>
       </Group>
-      <SkiaText
-        width={width}
-        height={height}
-        scale={isPressed ? 0.8 : 1}
-        text={text.label}
-        size={text.fontSize}
-        opacity={animRevert}
-        color={text.color}
-      />
-      <SkiaCircleProgress
-        width={width}
-        height={height}
-        color={progress.color}
-        opacity={anim}
-      />
+      {text && (
+        <SkiaText
+          width={width}
+          height={height}
+          scale={isPressed ? 0.8 : 1}
+          font={text.font}
+          label={text.label}
+          size={text.size}
+          opacity={animRevert}
+          color={text.color}
+          horizontalMargin={horizontalMargin}
+          verticalMargin={verticalMargin}
+        />
+      )}
+      {image && (
+        <SkiaImage
+          width={width}
+          height={height}
+          imageWidth={image.width ?? 0}
+          imageHeight={image.height ?? 0}
+          x={image.x}
+          y={image.y}
+          fit={image.fit ?? 'cover'}
+          opacity={animRevert}
+          normalSource={image.normalSource}
+          svgSource={image.svgSource}
+          horizontalMargin={horizontalMargin}
+          verticalMargin={verticalMargin}
+        />
+      )}
+      {progress && (
+        <SkiaCircleProgress
+          width={width}
+          height={height}
+          color={progress.color}
+          opacity={anim}
+          loading={loading}
+          horizontalMargin={horizontalMargin}
+          verticalMargin={verticalMargin}
+        />
+      )}
     </Canvas>
   );
 };

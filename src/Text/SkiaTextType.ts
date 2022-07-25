@@ -1,12 +1,17 @@
-import type { SkiaMutableValue } from "@shopify/react-native-skia";
+import type { Color, SkiaMutableValue } from '@shopify/react-native-skia';
+import type { ButtonType } from '../Button';
 
-export type SkiaTextPropsType = {
-  scale: number;
-  width: number;
-  height: number;
-  font?: string;
+export type TextType = {
   size: number;
-  text: string;
-  color: string;
-  opacity: SkiaMutableValue<number>
-}
+  label: string;
+  color: Color;
+  font?: ReturnType<typeof require> | string | Uint8Array;
+};
+
+export type SkiaTextPropsType = ButtonType &
+  TextType & {
+    scale: number;
+    width: number;
+    height: number;
+    opacity: SkiaMutableValue<number>;
+  };

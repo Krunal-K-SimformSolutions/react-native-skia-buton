@@ -2,22 +2,47 @@ import React from 'react';
 import {
   Text,
   useFont,
-  Group
-} from "@shopify/react-native-skia";
+  Group,
+  SkFont,
+} from '@shopify/react-native-skia';
 import type { SkiaTextPropsType } from './SkiaTextType';
- 
-const SkiaText = ({ scale, width, height, font, size, text, color, opacity }: SkiaTextPropsType) => {
-  const fontFamily = useFont(font ?? require("./SFProText-BoldItalic.otf"), size);
+
+const SkiaText = ({
+  scale,
+  width,
+  height,
+  font,
+  size,
+  label,
+  color,
+  opacity,
+  horizontalMargin,
+  verticalMargin,
+}: SkiaTextPropsType): JSX.Element | null => {
+  const fontFamily: SkFont | null = useFont(
+    font ?? require('./SFProText-BoldItalic.otf'),
+    size
+  );
   if (fontFamily === null) {
     return null;
   }
-  const textSize = fontFamily.measureText(text);
-  const textX = (((width - 40 + size * 1.5) /2) - (textSize.width/2));
-  const textY = (((height + 40 + size * 1.5) /2) - (textSize.height/2));
-
+  const textSize: number = fontFamily.getTextWidth(label);
+  const newHeight: number = height + 2 * verticalMargin;
+  const newWidth: number = width + 2 * horizontalMargin;
+  const textX: number = newWidth / 2 - textSize / 2;
+  const textY: number = newHeight / 2 + size / 3;
+  
   return (
     <Group transform={[{ scale }]} origin={{ x: textX, y: textY }}>
-      <Text x={textX} y={textY} text={text} font={fontFamily} size={size} color={color} opacity={opacity}/>
+      <Text
+        x={textX}
+        y={textY}
+        text={label}
+        font={fontFamily}
+        size={size}
+        color={color}
+        opacity={opacity}
+      />
     </Group>
   );
 };

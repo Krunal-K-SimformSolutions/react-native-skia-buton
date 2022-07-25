@@ -1,86 +1,53 @@
-import { TileMode, vec } from '@shopify/react-native-skia';
 import { Dimensions } from 'react-native';
-// Gradient ->
-// Gradient -> Type, angle, colors, positions
-//     Radial -> radius
-// background -> Color
-// corder -> radius, topLeft, Right, bottomLeft, Right
-// Image -> tint color
-// anim -> duration
-// stroke -> width, color, dash width, gap
+import type { StrokeType } from '../Stroke';
+import type { BackgroundType } from '../Background';
+import type { TextType } from '../Text';
+import type { ShadowType } from '../Shadow';
+import type { ProgressType } from '../CircleProgress';
+import type { ImageType } from '../Image';
 
-// type StrokeType = { width?: number, color?: string, dashWidth?: number, dashGap?: number }
-// type AnimType = { duration?: number }
-// type ImageType = { color?: string, width?: number, height?: number } & ({ normalSource?: string, svgSource?: never } | { normalSource?: never, svgSource?: string })
-// type GradientName = { gradientName?: string }
+export type ButtonType = {
+  horizontalMargin: number;
+  verticalMargin: number;
+};
 
-type GradientCommonType = {
-  colors: string[];
-  positions: number[];
-  mode: TileMode;
-};
-type LinearGradientType = GradientCommonType & {
-  type: 'linear';
-  start: [number, number];
-  end: [number, number];
-};
-type RadialGradientType = GradientCommonType & {
-  type: 'radial';
-  center: [number, number];
-  radius: number;
-};
-type ConicalGradientType = GradientCommonType & {
-  type: 'conical';
-  start: [number, number];
-  startRadius: number;
-  end: [number, number];
-  endRadius: number;
-};
-type SweepGradientType = GradientCommonType & {
-  type: 'sweep';
-  center: [number, number];
-  startAngle: number;
-  endAngle: number;
-};
-type GradientType =
-  | LinearGradientType
-  | RadialGradientType
-  | ConicalGradientType
-  | SweepGradientType;
-
-type BackgroundType =
-  | { color: string; gradient?: never }
-  | { color?: never; gradient: GradientType };
-type Shadow = { dx: number; dy: number; blur: number; color: string };
-type ShadowType = { lightShadow: Shadow; darkShadow: Shadow };
-type TextType = { fontSize: number; label: string; color: string };
-type ProgressType = { color: string | string[] };
-
-export type SkiaButtonPropsType = {
+export type SkiaButtonPropsType = ButtonType & {
   width: number;
   height: number;
   borderRadius: number;
   loading: boolean;
+  duration: number;
   onPress: () => void;
   background: BackgroundType;
   shadow?: ShadowType;
-  text: TextType;
+  text?: TextType;
   progress: ProgressType;
+  stroke?: StrokeType;
+  image?: ImageType;
 };
 
-const width = Dimensions.get('window').width;
+const width: number = Dimensions.get('window').width;
 
-export const defaultProps: SkiaButtonPropsType = {
+export const defaultProps = {
   width: width,
   height: 45,
-  borderRadius: 5,
+  borderRadius: 0,
+  horizontalMargin: 0,
+  verticalMargin: 0,
   loading: false,
+  duration: 1000,
   onPress: () => {},
-  background: { color: '#add8e6' },
-  shadow: {
-    lightShadow: { dx: -5, dy: -5, blur: 5, color: '#93b8c4' },
-    darkShadow: { dx: 5, dy: 5, blur: 5, color: '#c7f8ff' },
-  },
-  text: { fontSize: 24, label: 'Button', color: '#000000' },
-  progress: { color: ['#F44336', '#2196F3', '#009688'] },
+  // background: { color: '#add8e6' },
+  // shadow: {
+  //   lightShadow: { dx: -5, dy: -5, blur: 5, color: '#93b8c4' },
+  //   darkShadow: { dx: 5, dy: 5, blur: 5, color: '#c7f8ff' },
+  // },
+  // text: { size: 24, label: 'Button', color: '#000000' },
+  // progress: { color: ['#F44336', '#2196F3', '#009688'] },
+  // stroke: { color: '#F44336', width: 3 },
+  // image: {
+  //   width: 24,
+  //   height: 24,
+  //   normalSource: require('../Image/ic_react.png'),
+  // },
 };

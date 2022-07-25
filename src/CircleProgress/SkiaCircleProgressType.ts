@@ -1,8 +1,11 @@
-import type { SkiaMutableValue } from "@shopify/react-native-skia";
+import type { Color, SkiaMutableValue } from '@shopify/react-native-skia';
+import type { ButtonType } from '../Button';
 
-export type SkiaCircleProgressPropsType = {
+export type ProgressType = { color: Color | Color[] };
+
+export type SkiaCircleProgressPropsType = ButtonType & ProgressType & {
   width: number;
   height: number;
-  color: string | string[],
-  opacity: SkiaMutableValue<number>
-}
+  loading: boolean;
+  opacity: SkiaMutableValue<number>;
+};
