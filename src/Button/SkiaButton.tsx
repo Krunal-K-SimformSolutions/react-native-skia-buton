@@ -114,7 +114,10 @@ const SkiaButton = ({
     <Canvas
       style={StyleSheet.flatten([
         styles.container,
-        { width: width + 2 * horizontalMargin, height: height + 2 * verticalMargin },
+        {
+          width: width + 2 * horizontalMargin,
+          height: height + 2 * verticalMargin,
+        },
       ])}
       onTouch={touchHandler}
     >
@@ -127,8 +130,8 @@ const SkiaButton = ({
             lightShadow={shadow?.lightShadow}
           />
         )}
-        <Box box={animFillRect}>
-          {background && (
+        {background && (
+          <Box box={animFillRect}>
             <SkiaBackground
               width={width}
               height={height}
@@ -136,10 +139,10 @@ const SkiaButton = ({
               gradient={background.gradient}
               gradientName={background.gradientName}
             />
-          )}
-        </Box>
-        <Box box={animStrokeRect} color={'transparent'}>
-          {stroke && (
+          </Box>
+        )}
+        {stroke && (
+          <Box box={animStrokeRect} color={'transparent'}>
             <SkiaStroke
               width={width}
               height={height}
@@ -151,8 +154,8 @@ const SkiaButton = ({
               gradientName={stroke.gradientName}
               isDashed={isDashed}
             />
-          )}
-        </Box>
+          </Box>
+        )}
       </Group>
       {text && (
         <SkiaText
