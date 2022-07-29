@@ -1,15 +1,21 @@
 import { Box, BoxShadow } from '@shopify/react-native-skia';
 import React from 'react';
+import { SkiaBackground } from '../Background';
 import type { SkiaShadowPropsType } from './SkiaShadowType';
 
 const SkiaShadow = ({
-  animRRect,
+  width,
+  height,
+  color,
+  gradient,
+  gradientName,
   isPressed,
   darkShadow,
   lightShadow,
+  box,
 }: SkiaShadowPropsType): JSX.Element => {
   return (
-    <Box box={animRRect}>
+    <Box box={box}>
       {darkShadow && (
         <BoxShadow
           dx={darkShadow?.dx}
@@ -28,6 +34,13 @@ const SkiaShadow = ({
           inner={isPressed}
         />
       )}
+      <SkiaBackground
+        width={width}
+        height={height}
+        color={color}
+        gradient={gradient}
+        gradientName={gradientName}
+      />
     </Box>
   );
 };

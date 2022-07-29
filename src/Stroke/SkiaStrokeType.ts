@@ -1,5 +1,13 @@
-import type { Color } from '@shopify/react-native-skia';
-import type { BackgroundType, GradientNameType, GradientType } from '../Background';
+import type {
+  Color,
+  SkiaMutableValue,
+  SkRRect,
+} from '@shopify/react-native-skia';
+import type {
+  BackgroundType,
+  GradientNameType,
+  GradientType,
+} from '../Background';
 
 type StrokeCommonType = { width: number; dashWidth?: number; dashGap?: number };
 
@@ -13,6 +21,7 @@ export type SkiaStrokePropsType = {
   dashGap?: number;
   color?: Color;
   gradient?: GradientType;
-  gradientName?: GradientNameType
+  gradientName?: GradientNameType;
   isDashed: boolean;
+  box: SkiaMutableValue<SkRRect>;
 };

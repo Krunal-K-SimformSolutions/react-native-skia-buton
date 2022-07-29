@@ -61,7 +61,8 @@ const SkiaCircleProgress = ({
         handleColor(iteration + 1);
       }
     );
-  }, [color]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSpin = useCallback(() => {
     subscribeRotate.current = runTiming(
@@ -76,12 +77,13 @@ const SkiaCircleProgress = ({
         handleSpin();
       }
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    if(loading) {
+    if (loading) {
       handleSpin();
-      if(Array.isArray(color)) {
+      if (Array.isArray(color)) {
         handleColor();
       }
     }
@@ -90,6 +92,7 @@ const SkiaCircleProgress = ({
       subscribeRotate?.current?.cancel();
       subscribeColor?.current?.cancel();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading]);
 
   useValueEffect(rotation, (v: number) => {
@@ -97,7 +100,7 @@ const SkiaCircleProgress = ({
   });
 
   useValueEffect(colorIndex, (v: number) => {
-    const length = Array.isArray(color) ? color.length - 1 : 0
+    const length = Array.isArray(color) ? color.length - 1 : 0;
     const index = Math.ceil(v % length);
     const value = Array.isArray(color) ? color[index] : color;
     colorRing.current = value;

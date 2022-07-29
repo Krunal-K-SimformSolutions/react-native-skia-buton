@@ -24,11 +24,15 @@
   "scripts": {
     "test": "jest",
     "typescript": "tsc --noEmit",
-    "lint": "eslint \"**/*.{js,ts,tsx}\"",
     "prepare": "bob build",
     "release": "release-it",
     "example": "yarn --cwd example",
-    "bootstrap": "yarn example && yarn && yarn example pods"
+    "bootstrap": "yarn example && yarn && yarn example pods",
+    "check-typescript": "tsc -p .",
+    "lint": "eslint --no-error-on-unmatched-pattern './src/**/*.{js,jsx,ts,tsx}'",
+    "format": "yarn run lint --fix",
+    "pretty": "prettier --write --no-error-on-unmatched-pattern './src/**/*.{js,jsx,ts,tsx}'",
+    "pretty-Lint": "yarn run pretty && yarn run format && yarn run lint"
   },
   "keywords": [
     "react-native",
@@ -107,7 +111,7 @@
   },
   "eslintConfig": {
     "root": true,
-    "parser": "@babel/eslint-parser",
+    "parser": "@typescript-eslint/parser",
     "extends": [
       "@react-native-community",
       "prettier"

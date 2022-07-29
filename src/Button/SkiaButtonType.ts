@@ -1,10 +1,9 @@
 import { Dimensions } from 'react-native';
 import type { StrokeType } from '../Stroke';
 import type { BackgroundType } from '../Background';
-import type { TextType } from '../Text';
-import type { ShadowType } from '../Shadow';
 import type { ProgressType } from '../CircleProgress';
-import type { ImageType } from '../Image';
+import type { TextWithImageType } from '../TextWithImage';
+import type { ShadowType } from '../Shadow';
 
 export type ButtonType = {
   horizontalMargin: number;
@@ -20,11 +19,9 @@ export type SkiaButtonPropsType = ButtonType & {
   onPress: () => void;
   background: BackgroundType;
   shadow?: ShadowType;
-  text?: TextType;
   progress: ProgressType;
   stroke?: StrokeType;
-  image?: ImageType;
-};
+} & TextWithImageType;
 
 const width: number = Dimensions.get('window').width;
 
@@ -39,8 +36,8 @@ export const defaultProps = {
   onPress: () => {},
   // background: { color: '#add8e6' },
   // shadow: {
-  //   lightShadow: { dx: -5, dy: -5, blur: 5, color: '#93b8c4' },
-  //   darkShadow: { dx: 5, dy: 5, blur: 5, color: '#c7f8ff' },
+  //   lightShadow: { dx: -5, dy: -5, blur: 5, color: '#c7f8ff' },
+  //   darkShadow: { dx: 5, dy: 5, blur: 5, color: '#93b8c4' },
   // },
   // text: { size: 24, label: 'Button', color: '#000000' },
   // progress: { color: ['#F44336', '#2196F3', '#009688'] },
