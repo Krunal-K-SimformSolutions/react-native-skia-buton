@@ -4,7 +4,6 @@ import {
   useValue,
   useTouchHandler,
   runTiming,
-  Box,
   interpolate,
   useValueEffect,
   Group,
@@ -13,13 +12,11 @@ import {
 import { defaultProps, SkiaButtonPropsType } from './SkiaButtonType';
 import { StyleSheet } from 'react-native';
 import styles from './SkiaButtonStyle';
-import { SkiaText } from '../Text';
 import { SkiaCircleProgress } from '../CircleProgress';
-import { SkiaBackground } from '../Background';
-import { SkiaShadow } from '../Shadow';
 import { animRRectValue, isNotEmpty } from './SkiaButtonUtil';
 import { SkiaStroke } from '../Stroke';
-import { SkiaImage } from '../Image';
+import { SkiaTextWithImage } from '../TextWithImage';
+import { SkiaShadow } from '../Shadow';
 
 const SkiaButton = ({
   width,
@@ -36,6 +33,7 @@ const SkiaButton = ({
   progress,
   stroke,
   image,
+  imageDirection,
 }: SkiaButtonPropsType) => {
   const isDashed: boolean =
     isNotEmpty(stroke?.dashWidth) && isNotEmpty(stroke?.dashGap);
@@ -78,9 +76,9 @@ const SkiaButton = ({
     },
   });
 
-  useValueEffect(anim, (progress) => {
+  useValueEffect(anim, (progs) => {
     animFillRect.current = animRRectValue(
-      progress,
+      progs,
       width,
       height,
       borderRadius,
@@ -90,7 +88,7 @@ const SkiaButton = ({
       isDashed
     );
     animStrokeRect.current = animRRectValue(
-      progress,
+      progs,
       width,
       height,
       borderRadius,
@@ -99,7 +97,7 @@ const SkiaButton = ({
       stroke?.width ?? 0,
       false
     );
-    animRevert.current = interpolate(progress, [0, 1], [1, 0]);
+    animRevert.current = interpolate(progs, [0, 1], [1, 0]);
   });
 
   useEffect(() => {
@@ -108,80 +106,57 @@ const SkiaButton = ({
     } else {
       runTiming(anim, 0, { duration });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading]);
 
   return (
     <Canvas
       style={StyleSheet.flatten([
         styles.container,
-        { width: width + 2 * horizontalMargin, height: height + 2 * verticalMargin },
+        {
+          width: width + 2 * horizontalMargin,
+          height: height + 2 * verticalMargin,
+        },
       ])}
       onTouch={touchHandler}
     >
       <Group>
-        {shadow && (
-          <SkiaShadow
-            animRRect={animFillRect}
-            isPressed={isPressed}
-            darkShadow={shadow?.darkShadow}
-            lightShadow={shadow?.lightShadow}
+        <SkiaShadow
+          width={width}
+          height={height}
+          box={animFillRect}
+          color={background?.color}
+          gradient={background?.gradient}
+          gradientName={background?.gradientName}
+          isPressed={isPressed}
+          darkShadow={shadow?.darkShadow}
+          lightShadow={shadow?.lightShadow}
+        />
+        {stroke && (
+          <SkiaStroke
+            width={width}
+            height={height}
+            box={animStrokeRect}
+            strokeWidth={stroke.width}
+            dashWidth={stroke.dashWidth}
+            dashGap={stroke.dashGap}
+            color={stroke.color}
+            gradient={stroke.gradient}
+            gradientName={stroke.gradientName}
+            isDashed={isDashed}
           />
         )}
-        <Box box={animFillRect}>
-          {background && (
-            <SkiaBackground
-              width={width}
-              height={height}
-              color={background.color}
-              gradient={background.gradient}
-              gradientName={background.gradientName}
-            />
-          )}
-        </Box>
-        <Box box={animStrokeRect} color={'transparent'}>
-          {stroke && (
-            <SkiaStroke
-              width={width}
-              height={height}
-              strokeWidth={stroke.width}
-              dashWidth={stroke.dashWidth}
-              dashGap={stroke.dashGap}
-              color={stroke.color}
-              gradient={stroke.gradient}
-              gradientName={stroke.gradientName}
-              isDashed={isDashed}
-            />
-          )}
-        </Box>
       </Group>
-      {text && (
-        <SkiaText
+      {(text || image) && (
+        <SkiaTextWithImage
+          text={text}
           width={width}
           height={height}
-          scale={isPressed ? 0.8 : 1}
-          font={text.font}
-          label={text.label}
-          size={text.size}
           opacity={animRevert}
-          color={text.color}
           horizontalMargin={horizontalMargin}
           verticalMargin={verticalMargin}
-        />
-      )}
-      {image && (
-        <SkiaImage
-          width={width}
-          height={height}
-          imageWidth={image.width ?? 0}
-          imageHeight={image.height ?? 0}
-          x={image.x}
-          y={image.y}
-          fit={image.fit ?? 'cover'}
-          opacity={animRevert}
-          normalSource={image.normalSource}
-          svgSource={image.svgSource}
-          horizontalMargin={horizontalMargin}
-          verticalMargin={verticalMargin}
+          image={image}
+          imageDirection={imageDirection}
         />
       )}
       {progress && (

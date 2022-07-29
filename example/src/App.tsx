@@ -131,7 +131,10 @@ export default function App() {
         horizontalMargin={20}
         borderRadius={10}
         width={width-40}
-        image={{ svgSource: require('./ic_svg.svg'), width: 32, height: 32 }}
+        height={50}
+        text={{ size: 16, label: 'Button With Image', color: '#FFFFFF' }}
+        image={{ normalSource: require('./ic_png.png'), width: 32, height: 32 }}
+        imageDirection={"left"}
         progress={{ color: '#F44336' }}
         stroke={{ color: '#F44336', width: 3, dashWidth: 6, dashGap: 3 }}
       />
