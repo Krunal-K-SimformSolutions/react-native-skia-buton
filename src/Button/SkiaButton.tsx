@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Canvas,
   useValue,
   useTouchHandler,
   runTiming,
-  interpolate,
   useValueEffect,
   Group,
   SkRRect,
@@ -13,34 +12,39 @@ import { defaultProps, SkiaButtonPropsType } from './SkiaButtonType';
 import { StyleSheet } from 'react-native';
 import styles from './SkiaButtonStyle';
 import { SkiaCircleProgress } from '../CircleProgress';
-import { animRRectValue, isNotEmpty } from './SkiaButtonUtil';
+import {
+  animRRectValue,
+  getSkiaButtonProps,
+  GetSkiaButtonPropsReturnType,
+} from './SkiaButtonUtil';
 import { SkiaStroke } from '../Stroke';
 import { SkiaTextWithImage } from '../TextWithImage';
 import { SkiaShadow } from '../Shadow';
 
-const SkiaButton = ({
-  width,
-  height,
-  borderRadius,
-  horizontalMargin,
-  verticalMargin,
-  loading,
-  duration,
-  onPress,
-  background,
-  shadow,
-  text,
-  progress,
-  stroke,
-  image,
-  imageDirection,
-}: SkiaButtonPropsType) => {
-  const isDashed: boolean =
-    isNotEmpty(stroke?.dashWidth) && isNotEmpty(stroke?.dashGap);
+const SkiaButton = (props: SkiaButtonPropsType) => {
+  const {
+    width,
+    height,
+    borderRadius,
+    horizontalMargin,
+    verticalMargin,
+    background,
+    shadow,
+    text,
+    stroke,
+    image,
+    imageDirection,
+    isDashed,
+    isRevetSize,
+  } = useMemo<GetSkiaButtonPropsReturnType>(
+    () => getSkiaButtonProps(props),
+    [props]
+  );
 
   const [isPressed, setPressed] = useState<boolean>(false);
-  const anim = useValue<number>(0);
-  const animRevert = useValue<number>(1);
+  const animSize = useValue<number>(0);
+  const animShow = useValue<number>(0);
+  const animHide = useValue<number>(1);
   const animFillRect = useValue<SkRRect>(
     animRRectValue(
       0,
@@ -72,11 +76,11 @@ const SkiaButton = ({
     },
     onEnd: () => {
       setPressed(false);
-      onPress();
+      props.onPress(props.currentState);
     },
   });
 
-  useValueEffect(anim, (progs) => {
+  useValueEffect(animSize, (progs) => {
     animFillRect.current = animRRectValue(
       progs,
       width,
@@ -97,17 +101,25 @@ const SkiaButton = ({
       stroke?.width ?? 0,
       false
     );
-    animRevert.current = interpolate(progs, [0, 1], [1, 0]);
   });
 
   useEffect(() => {
-    if (loading) {
-      runTiming(anim, 1, { duration });
+    if (props.currentState === 'loading') {
+      runTiming(animSize, 1, { duration: props.duration });
+      runTiming(animShow, 1, { duration: props.duration });
+      runTiming(animHide, 0, { duration: props.duration });
     } else {
-      runTiming(anim, 0, { duration });
+      if (isRevetSize) {
+        runTiming(animSize, 0, { duration: props.duration });
+      }
+      runTiming(animShow, 0, { duration: props.duration });
+      runTiming(animHide, 1, { duration: props.duration });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading]);
+  }, [props.currentState, isRevetSize]);
+
+  const isTouchable: boolean =
+    props.currentState !== 'disable' && props.currentState !== 'loading';
 
   return (
     <Canvas
@@ -118,7 +130,7 @@ const SkiaButton = ({
           height: height + 2 * verticalMargin,
         },
       ])}
-      onTouch={touchHandler}
+      onTouch={isTouchable ? touchHandler : undefined}
     >
       <Group>
         <SkiaShadow
@@ -152,20 +164,20 @@ const SkiaButton = ({
           text={text}
           width={width}
           height={height}
-          opacity={animRevert}
+          opacity={animHide}
           horizontalMargin={horizontalMargin}
           verticalMargin={verticalMargin}
           image={image}
           imageDirection={imageDirection}
         />
       )}
-      {progress && (
+      {props.progress && (
         <SkiaCircleProgress
           width={width}
           height={height}
-          color={progress.color}
-          opacity={anim}
-          loading={loading}
+          color={props.progress.color}
+          opacity={animShow}
+          loading={props.currentState === 'loading'}
           horizontalMargin={horizontalMargin}
           verticalMargin={verticalMargin}
         />

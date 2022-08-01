@@ -44,9 +44,9 @@ export type SkiaTextWithImagePropsType = {
   text?: TextType;
   width: number;
   height: number;
-  opacity: SkiaMutableValue<number>;
   horizontalMargin: number;
   verticalMargin: number;
+  opacity: SkiaMutableValue<number>;
   image?: ImageType;
   imageDirection?: 'left' | 'right' | 'top' | 'bottom';
 };

@@ -85,6 +85,8 @@ const SkiaCircleProgress = ({
       handleSpin();
       if (Array.isArray(color)) {
         handleColor();
+      } else {
+        colorIndex.current = 0;
       }
     }
 
