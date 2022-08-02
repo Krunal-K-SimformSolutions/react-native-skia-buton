@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   LinearGradient,
   Paint,
@@ -10,6 +10,7 @@ import {
 import type {
   GradientDataType,
   SkiaBackgroundPropsType,
+  GetStartAndEndReturnType,
 } from './SkiaBackgroundType';
 import { getGradientFromName, getStartAndEnd } from './SkiaBackgroundUtil';
 
@@ -22,12 +23,18 @@ const SkiaBackground = ({
   children,
   ...others
 }: SkiaBackgroundPropsType): JSX.Element => {
-  const gradientByName: GradientDataType | null =
-    getGradientFromName(gradientName);
-  const startAndEnd =
-    gradientByName !== null
-      ? getStartAndEnd(gradientByName.angle || 0, width, height)
-      : null;
+  const gradientByName = useMemo<GradientDataType | null>(
+    () => getGradientFromName(gradientName),
+    [gradientName]
+  );
+  const startAndEnd = useMemo<GetStartAndEndReturnType | null>(
+    () =>
+      gradientByName !== null
+        ? getStartAndEnd(gradientByName.angle || 0, width, height)
+        : null,
+    [gradientByName, height, width]
+  );
+
   const noColor = ['transparent'];
 
   return (

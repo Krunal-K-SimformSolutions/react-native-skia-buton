@@ -12,7 +12,7 @@ import {
   useValue,
   useValueEffect,
 } from '@shopify/react-native-skia';
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import type { SkiaCircleProgressPropsType } from './SkiaCircleProgressType';
 
 const SkiaCircleProgress = ({
@@ -24,11 +24,23 @@ const SkiaCircleProgress = ({
   horizontalMargin,
   verticalMargin,
 }: SkiaCircleProgressPropsType): JSX.Element => {
-  const newHeight: number = height + 2 * verticalMargin;
-  const newWidth: number = width + 2 * horizontalMargin;
-  const animSize: number = Math.min(newWidth, newHeight);
+  const newHeight: number = useMemo(
+    () => height + 2 * verticalMargin,
+    [height, verticalMargin]
+  );
+  const newWidth: number = useMemo(
+    () => width + 2 * horizontalMargin,
+    [horizontalMargin, width]
+  );
+  const animSize: number = useMemo(
+    () => Math.min(newWidth, newHeight),
+    [newHeight, newWidth]
+  );
   const reduceSize: number = 10;
-  const circleHeight: number = animSize - 2 * reduceSize;
+  const circleHeight: number = useMemo(
+    () => animSize - 2 * reduceSize,
+    [animSize]
+  );
   const path: SkPath = Skia.Path.Make();
   path.addArc(
     {

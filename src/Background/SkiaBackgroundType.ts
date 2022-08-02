@@ -246,3 +246,8 @@ export type SkiaBackgroundPropsType = {
   antiAlias?: boolean;
   children?: ReactNode | ReactNode[];
 };
+
+export type GetStartAndEndReturnType = {
+  start: [number, number];
+  end: [number, number];
+};

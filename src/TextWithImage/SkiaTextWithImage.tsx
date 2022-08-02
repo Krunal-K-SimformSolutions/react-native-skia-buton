@@ -12,7 +12,7 @@ import {
   usePaintRef,
   useSVG,
 } from '@shopify/react-native-skia';
-import React from 'react';
+import React, { useMemo } from 'react';
 import type {
   SkiaTextWithImagePropsType,
   TextWithImageXY,
@@ -43,15 +43,28 @@ const SkiaTextWithImage = ({
       (image?.normalSource ? undefined : require('./ic_react_native.svg'))
   );
 
-  const { textX, textY, imageX, imageY }: TextWithImageXY = getTextWithImageXY(
-    height,
-    width,
-    verticalMargin,
-    horizontalMargin,
-    fontFamily,
-    text,
-    image,
-    imageDirection
+  const { textX, textY, imageX, imageY } = useMemo<TextWithImageXY>(
+    () =>
+      getTextWithImageXY(
+        height,
+        width,
+        verticalMargin,
+        horizontalMargin,
+        fontFamily,
+        text,
+        image,
+        imageDirection
+      ),
+    [
+      fontFamily,
+      height,
+      horizontalMargin,
+      image,
+      imageDirection,
+      text,
+      verticalMargin,
+      width,
+    ]
   );
 
   return (

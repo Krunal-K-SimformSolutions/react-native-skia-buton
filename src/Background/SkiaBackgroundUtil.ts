@@ -1,4 +1,7 @@
-import type { GradientDataType } from './SkiaBackgroundType';
+import type {
+  GetStartAndEndReturnType,
+  GradientDataType,
+} from './SkiaBackgroundType';
 
 const toRadians = (angle: number): number => {
   return (angle * Math.PI) / 180;
@@ -8,10 +11,7 @@ export const getStartAndEnd = (
   angle: number,
   width: number,
   height: number
-): {
-  start: [number, number];
-  end: [number, number];
-} => {
+): GetStartAndEndReturnType => {
   const radians: number = toRadians(angle);
   const hyp = Math.sqrt(width * width + height * height);
 
