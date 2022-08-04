@@ -3,69 +3,82 @@ import type { ImageType, TextType } from '../TextWithImage';
 import type { BackgroundType } from '../Background';
 import type { ShadowType } from '../Shadow';
 import type { StrokeType } from '../Stroke';
-import type { SkiaButtonPropsType } from './SkiaButtonType';
+import type {
+  AnimRRectValueArgsType,
+  SkiaButtonPropsType,
+} from './SkiaButtonType';
 
 export const isNotEmpty = (value?: number): boolean => {
   return value !== null && value !== undefined && value > 0;
 };
 
-export const animRRectValue = (
-  animCurrentProgress: number,
-  width: number,
-  height: number,
-  radius: number,
-  horizontalMargin: number,
-  verticalMargin: number,
-  strokeWidth: number,
-  isDashed: boolean
-): SkRRect => {
-  const newHeight: number = height + 2 * verticalMargin;
-  const newWidth: number = width + 2 * horizontalMargin;
-  const animSize = Math.min(newWidth, newHeight) - 5;
+export const animRRectValue = ({
+  animCurrentProgress,
+  width,
+  height,
+  borderRadius,
+  animWidth,
+  animHeight,
+  animBorderRadius,
+  strokeWidth,
+  isDashed,
+  isShadow,
+}: AnimRRectValueArgsType): SkRRect => {
+  const shadow: number = isShadow ? 5 : 2;
+  const shadowDouble: number = 2 * shadow;
   const stroke: number = isDashed ? strokeWidth / 2 : 0;
   const strokeDouble: number = 2 * stroke;
-  const radiusOutput: [number, number] = [radius, animSize / 2];
+  const radiusOutput: [number, number] = [borderRadius, animBorderRadius];
 
-  return rrect(
+  const skrRect: SkRRect = rrect(
     rect(
       interpolate(
         animCurrentProgress,
         [0, 1],
-        [horizontalMargin + stroke, newWidth / 2 - animSize / 2 + stroke]
+        [stroke + shadow, width / 2 - animWidth / 2 + stroke + shadow]
       ),
       interpolate(
         animCurrentProgress,
         [0, 1],
-        [verticalMargin + stroke, newHeight / 2 - animSize / 2 + stroke]
+        [stroke + shadow, height / 2 - animHeight / 2 + stroke + shadow]
       ),
       interpolate(
         animCurrentProgress,
         [0, 1],
-        [width - strokeDouble, animSize - strokeDouble]
+        [
+          width - strokeDouble - shadowDouble,
+          animWidth - strokeDouble - shadowDouble,
+        ]
       ),
       interpolate(
         animCurrentProgress,
         [0, 1],
-        [height - strokeDouble, animSize - strokeDouble]
+        [
+          height - strokeDouble - shadowDouble,
+          animHeight - strokeDouble - shadowDouble,
+        ]
       )
     ),
     interpolate(animCurrentProgress, [0, 1], radiusOutput),
     interpolate(animCurrentProgress, [0, 1], radiusOutput)
   );
+  return skrRect;
 };
 
 export type GetSkiaButtonPropsReturnType = {
   width: number;
   height: number;
   borderRadius: number;
-  horizontalMargin: number;
-  verticalMargin: number;
+  animWidth: number;
+  animHeight: number;
+  animBorderRadius: number;
   background: BackgroundType | undefined;
   shadow: ShadowType | undefined;
   text: TextType | undefined;
   stroke: StrokeType | undefined;
   image: ImageType | undefined;
   isDashed: boolean;
+  isShadow: boolean;
   imageDirection: 'left' | 'right' | 'top' | 'bottom' | undefined;
   isRevetSize: boolean;
 };
@@ -79,15 +92,10 @@ const getKeyValue = (
   return (perticular[key] ?? idle[key] ?? def[key] ?? 0) as number;
 };
 
-const keys = [
-  'width',
-  'height',
-  'borderRadius',
-  'horizontalMargin',
-  'verticalMargin',
-];
+const keys = ['width', 'height', 'borderRadius'];
 export const getSkiaButtonProps = ({
   currentState,
+  anim,
   state,
   ...Other
 }: SkiaButtonPropsType): GetSkiaButtonPropsReturnType => {
@@ -97,8 +105,9 @@ export const getSkiaButtonProps = ({
     width: 0,
     height: 0,
     borderRadius: 0,
-    horizontalMargin: 0,
-    verticalMargin: 0,
+    animWidth: 0,
+    animHeight: 0,
+    animBorderRadius: 0,
     background: { color: 'transparent' },
     shadow: undefined,
     text: undefined,
@@ -106,6 +115,7 @@ export const getSkiaButtonProps = ({
     image: undefined,
     imageDirection: undefined,
     isDashed: false,
+    isShadow: false,
     isRevetSize: true,
   };
 
@@ -220,6 +230,14 @@ export const getSkiaButtonProps = ({
   object.isDashed =
     isNotEmpty(object?.stroke?.dashWidth) &&
     isNotEmpty(object?.stroke?.dashGap);
+  object.isShadow = object?.shadow !== null && object?.shadow !== undefined;
+  const animSize: number = Math.min(object.width, object.height);
+  object.animWidth =
+    (anim?.width ? Math.min(anim?.width, object.width) : undefined) ?? animSize;
+  object.animHeight =
+    (anim?.height ? Math.min(anim?.height, object.height) : undefined) ??
+    animSize;
+  object.animBorderRadius = anim?.borderRadius ?? animSize / 2;
 
   return object;
 };

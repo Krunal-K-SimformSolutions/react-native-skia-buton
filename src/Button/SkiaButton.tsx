@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Canvas,
   useValue,
@@ -7,11 +7,11 @@ import {
   useValueEffect,
   Group,
   SkRRect,
+  SkiaAnimation,
 } from '@shopify/react-native-skia';
 import { defaultProps, SkiaButtonPropsType } from './SkiaButtonType';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import styles from './SkiaButtonStyle';
-import { SkiaCircleProgress } from '../CircleProgress';
 import {
   animRRectValue,
   getSkiaButtonProps,
@@ -20,14 +20,16 @@ import {
 import { SkiaStroke } from '../Stroke';
 import { SkiaTextWithImage } from '../TextWithImage';
 import { SkiaShadow } from '../Shadow';
+import { SkiaIndicator } from '../Indicator';
 
 const SkiaButton = (props: SkiaButtonPropsType) => {
   const {
     width,
     height,
     borderRadius,
-    horizontalMargin,
-    verticalMargin,
+    animWidth,
+    animHeight,
+    animBorderRadius,
     background,
     shadow,
     text,
@@ -35,6 +37,7 @@ const SkiaButton = (props: SkiaButtonPropsType) => {
     image,
     imageDirection,
     isDashed,
+    isShadow,
     isRevetSize,
   } = useMemo<GetSkiaButtonPropsReturnType>(
     () => getSkiaButtonProps(props),
@@ -42,33 +45,42 @@ const SkiaButton = (props: SkiaButtonPropsType) => {
   );
 
   const [isPressed, setPressed] = useState<boolean>(false);
+  const [animating, setAnimating] = useState<boolean>(false);
   const animSize = useValue<number>(0);
   const animShow = useValue<number>(0);
   const animHide = useValue<number>(1);
   const animFillRect = useValue<SkRRect>(
-    animRRectValue(
-      0,
+    animRRectValue({
+      animCurrentProgress: 0,
       width,
       height,
       borderRadius,
-      horizontalMargin,
-      verticalMargin,
-      stroke?.width ?? 0,
-      isDashed
-    )
+      animWidth,
+      animHeight,
+      animBorderRadius,
+      strokeWidth: stroke?.width ?? 0,
+      isDashed,
+      isShadow: isDashed ? false : isShadow,
+    })
   );
   const animStrokeRect = useValue<SkRRect>(
-    animRRectValue(
-      0,
+    animRRectValue({
+      animCurrentProgress: 0,
       width,
       height,
       borderRadius,
-      horizontalMargin,
-      verticalMargin,
-      stroke?.width ?? 0,
-      false
-    )
+      animWidth,
+      animHeight,
+      animBorderRadius,
+      strokeWidth: stroke?.width ?? 0,
+      isDashed: false,
+      isShadow: isDashed ? isShadow : false,
+    })
   );
+  const firstTime = useRef<boolean>(true);
+  const subscribeSize = useRef<SkiaAnimation>();
+  const subscribeShow = useRef<SkiaAnimation>();
+  const subscribeHide = useRef<SkiaAnimation>();
 
   const touchHandler = useTouchHandler({
     onStart: () => {
@@ -81,108 +93,169 @@ const SkiaButton = (props: SkiaButtonPropsType) => {
   });
 
   useValueEffect(animSize, (progs) => {
-    animFillRect.current = animRRectValue(
-      progs,
+    animFillRect.current = animRRectValue({
+      animCurrentProgress: progs,
       width,
       height,
       borderRadius,
-      horizontalMargin,
-      verticalMargin,
-      stroke?.width ?? 0,
-      isDashed
-    );
-    animStrokeRect.current = animRRectValue(
-      progs,
+      animWidth,
+      animHeight,
+      animBorderRadius,
+      strokeWidth: stroke?.width ?? 0,
+      isDashed,
+      isShadow: isDashed ? false : isShadow,
+    });
+    animStrokeRect.current = animRRectValue({
+      animCurrentProgress: progs,
       width,
       height,
       borderRadius,
-      horizontalMargin,
-      verticalMargin,
-      stroke?.width ?? 0,
-      false
-    );
+      animWidth,
+      animHeight,
+      animBorderRadius,
+      strokeWidth: stroke?.width ?? 0,
+      isDashed: false,
+      isShadow: isDashed ? isShadow : false,
+    });
   });
 
   useEffect(() => {
+    const duration: number = props.anim?.duration ?? 1200;
     if (props.currentState === 'loading') {
-      runTiming(animSize, 1, { duration: props.duration });
-      runTiming(animShow, 1, { duration: props.duration });
-      runTiming(animHide, 0, { duration: props.duration });
+      subscribeSize.current = runTiming(
+        animSize,
+        { from: 0, to: 1 },
+        {
+          duration,
+        }
+      );
+      subscribeShow.current = runTiming(
+        animShow,
+        { from: 0, to: 1 },
+        {
+          duration: duration / 2,
+        },
+        () => {
+          animShow.current = -1;
+          setAnimating(true);
+        }
+      );
+      subscribeHide.current = runTiming(
+        animHide,
+        { from: 1, to: 0 },
+        {
+          duration: duration / 2,
+        }
+      );
+    } else if (firstTime.current) {
+      firstTime.current = false;
     } else {
-      if (isRevetSize) {
-        runTiming(animSize, 0, { duration: props.duration });
+      if (animShow.current === -1) {
+        animShow.current = 1;
+        setAnimating(false);
       }
-      runTiming(animShow, 0, { duration: props.duration });
-      runTiming(animHide, 1, { duration: props.duration });
+      if (isRevetSize) {
+        subscribeSize.current = runTiming(
+          animSize,
+          { from: 1, to: 0 },
+          {
+            duration,
+          }
+        );
+      }
+      subscribeShow.current = runTiming(
+        animShow,
+        { from: 1, to: 0 },
+        {
+          duration: duration / 2,
+        }
+      );
+      subscribeHide.current = runTiming(
+        animHide,
+        { from: 0, to: 1 },
+        {
+          duration: duration / 2,
+        }
+      );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [props.currentState, isRevetSize]);
+  }, [props.currentState, props.anim?.duration, isRevetSize]);
+
+  useEffect(() => {
+    return () => {
+      subscribeSize?.current?.cancel();
+      subscribeShow?.current?.cancel();
+      subscribeHide?.current?.cancel();
+    };
+  }, []);
 
   const isTouchable: boolean =
     props.currentState !== 'disable' && props.currentState !== 'loading';
 
   return (
-    <Canvas
-      style={StyleSheet.flatten([
-        styles.container,
-        {
-          width: width + 2 * horizontalMargin,
-          height: height + 2 * verticalMargin,
-        },
-      ])}
-      onTouch={isTouchable ? touchHandler : undefined}
-    >
-      <Group>
-        <SkiaShadow
-          width={width}
-          height={height}
-          box={animFillRect}
-          color={background?.color}
-          gradient={background?.gradient}
-          gradientName={background?.gradientName}
-          isPressed={isPressed}
-          darkShadow={shadow?.darkShadow}
-          lightShadow={shadow?.lightShadow}
-        />
-        {stroke && (
-          <SkiaStroke
+    <View style={StyleSheet.flatten([styles.container, { width, height }])}>
+      <Canvas
+        style={styles.canvasButton}
+        onTouch={isTouchable ? touchHandler : undefined}
+      >
+        <Group>
+          <SkiaShadow
             width={width}
             height={height}
-            box={animStrokeRect}
-            strokeWidth={stroke.width}
-            dashWidth={stroke.dashWidth}
-            dashGap={stroke.dashGap}
-            color={stroke.color}
-            gradient={stroke.gradient}
-            gradientName={stroke.gradientName}
-            isDashed={isDashed}
+            box={animFillRect}
+            color={background?.color}
+            gradient={background?.gradient}
+            gradientName={background?.gradientName}
+            isPressed={isPressed}
+            darkShadow={shadow?.darkShadow}
+            lightShadow={shadow?.lightShadow}
+          />
+          {stroke && (
+            <SkiaStroke
+              width={width}
+              height={height}
+              box={animStrokeRect}
+              strokeWidth={stroke.width}
+              dashWidth={stroke.dashWidth}
+              dashGap={stroke.dashGap}
+              color={stroke.color}
+              gradient={stroke.gradient}
+              gradientName={stroke.gradientName}
+              isDashed={isDashed}
+            />
+          )}
+        </Group>
+        {(text || image) && (
+          <SkiaTextWithImage
+            text={text}
+            width={width}
+            height={height}
+            opacity={animHide}
+            image={image}
+            imageDirection={imageDirection}
           />
         )}
-      </Group>
-      {(text || image) && (
-        <SkiaTextWithImage
-          text={text}
-          width={width}
-          height={height}
-          opacity={animHide}
-          horizontalMargin={horizontalMargin}
-          verticalMargin={verticalMargin}
-          image={image}
-          imageDirection={imageDirection}
-        />
-      )}
+      </Canvas>
       {props.progress && (
-        <SkiaCircleProgress
-          width={width}
-          height={height}
-          color={props.progress.color}
+        <SkiaIndicator
+          width={animWidth}
+          height={animHeight}
+          borderRadius={animBorderRadius}
           opacity={animShow}
-          loading={props.currentState === 'loading'}
-          horizontalMargin={horizontalMargin}
-          verticalMargin={verticalMargin}
+          animating={animating}
+          isShadow={isShadow}
+          {...props.progress}
+          style={StyleSheet.flatten([
+            styles.canvasProgress,
+            {
+              top: height / 2 - animHeight / 2 + 5,
+              left: width / 2 - animWidth / 2 + 5,
+            },
+          ])}
+          onTouch={isTouchable ? touchHandler : undefined}
         />
       )}
-    </Canvas>
+    </View>
   );
 };
 

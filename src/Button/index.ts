@@ -1,2 +1,2 @@
 export { default as SkiaButton } from './SkiaButton';
-export type { SkiaButtonStateType } from './SkiaButtonType';
+export type { SkiaButtonStateType, SkiaButtonAnimType } from './SkiaButtonType';

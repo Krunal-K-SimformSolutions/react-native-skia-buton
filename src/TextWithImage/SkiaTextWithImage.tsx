@@ -24,8 +24,6 @@ const SkiaTextWithImage = ({
   width,
   height,
   opacity,
-  horizontalMargin,
-  verticalMargin,
   image,
   imageDirection,
 }: SkiaTextWithImagePropsType) => {
@@ -48,23 +46,12 @@ const SkiaTextWithImage = ({
       getTextWithImageXY(
         height,
         width,
-        verticalMargin,
-        horizontalMargin,
         fontFamily,
         text,
         image,
         imageDirection
       ),
-    [
-      fontFamily,
-      height,
-      horizontalMargin,
-      image,
-      imageDirection,
-      text,
-      verticalMargin,
-      width,
-    ]
+    [height, width, fontFamily, image, imageDirection, text]
   );
 
   return (

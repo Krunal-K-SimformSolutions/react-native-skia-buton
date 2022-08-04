@@ -5,4 +5,12 @@ export default StyleSheet.create({
     justifyContent: 'center',
     alignContent: 'center',
   },
+  canvasButton: {
+    flex: 1,
+  },
+  canvasProgress: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+  },
 });
